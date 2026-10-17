@@ -1,0 +1,86 @@
+strategy:
+  id: "vwap_bounce"
+  name: "VWAP Bounce"
+  version: 1
+  description: "Buy pullbacks to VWAP in an uptrending day, short rallies to VWAP in a downtrending day. Edge: VWAP acts as a magnet for institutional order flow."
+  author: "library"
+  active: true
+  is_library: true
+
+  market_regime:
+    preferred:
+      - trending_bullish
+      - trending_bearish
+    neutral:
+      - high_volatility
+    avoid:
+      - ranging
+      - low_volatility
+
+  entry:
+    direction: any
+    time_window:
+      start: "10:00"
+      end: "14:30"
+    confirmations:
+      - type: "vwap_proximity"
+        required: true
+        weight: 2.0
+        description: "Price within 0.15% of VWAP"
+        params:
+          max_distance_pct: 0.15
+      - type: "trend_alignment"
+        required: true
+        weight: 1.5
+        description: "Price on correct side of VWAP — long above, short below"
+        params:
+          ema_period: 20
+      - type: "rejection_candle"
+        required: false
+        weight: 1.0
+        description: "Bullish/bearish rejection candle at VWAP"
+        params:
+          min_wick_ratio: 0.5
+    avoid_conditions:
+      - type: "vwap_chop"
+        description: "Price crossing VWAP more than 3 times in last 30 min"
+        params:
+          max_crosses: 3
+          lookback_minutes: 30
+
+  exit:
+    stop_loss:
+      type: "atr"
+      params:
+        atr_multiple: 1.0
+        side: "opposite"
+    targets:
+      - r_multiple: 1.5
+        size_pct: 60
+      - r_multiple: 2.5
+        size_pct: 40
+    trailing:
+      enabled: true
+      type: "vwap"
+      activate_at_r: 1.0
+      params: {}
+    time_exit:
+      enabled: true
+      max_duration_minutes: 90
+      close_before: "15:00"
+
+  risk:
+    max_risk_pct: 0.75
+    min_r_target: 1.5
+    max_daily_trades: 4
+    max_daily_loss_pct: 2.0
+
+  execution:
+    entry_type: "limit"
+    preferred_timeframe: "5m"
+    notes: "Best in first half of session. Avoid near lunch (12:30-13:00)."
+
+  invalidation:
+    - type: "vwap_break"
+      description: "Price closes on wrong side of VWAP"
+      params: {}

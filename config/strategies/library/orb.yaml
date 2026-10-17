@@ -1,0 +1,88 @@
+strategy:
+  id: "orb"
+  name: "Opening Range Breakout"
+  version: 1
+  description: "Trade the breakout of the first 15-minute opening range. Long above high, short below low. Edge comes from directional bias set in the opening auction."
+  author: "library"
+  active: true
+  is_library: true
+
+  market_regime:
+    preferred:
+      - trending_bullish
+      - breakout
+    neutral:
+      - high_volatility
+    avoid:
+      - ranging
+      - mean_reverting
+
+  entry:
+    direction: any
+    time_window:
+      start: "09:30"
+      end: "11:30"
+    confirmations:
+      - type: "orb_breakout"
+        required: true
+        weight: 2.0
+        description: "Price breaks above/below first 15m high/low"
+        params:
+          lookback_minutes: 15
+      - type: "volume_surge"
+        required: true
+        weight: 1.5
+        description: "Volume 1.5x+ average at breakout bar"
+        params:
+          min_ratio: 1.5
+      - type: "prior_day_context"
+        required: false
+        weight: 1.0
+        description: "Price above/below prior day close confirms direction"
+        params: {}
+    avoid_conditions:
+      - type: "pre_market_gap"
+        description: "Avoid if gap > 2% — risk of reversal"
+        params:
+          max_gap_pct: 2.0
+
+  exit:
+    stop_loss:
+      type: "structure"
+      params:
+        reference: "opposite_orb_level"
+        buffer_atr: 0.2
+    targets:
+      - r_multiple: 1.5
+        size_pct: 50
+      - r_multiple: 2.5
+        size_pct: 30
+      - r_multiple: 4.0
+        size_pct: 20
+    trailing:
+      enabled: true
+      type: "atr"
+      activate_at_r: 1.5
+      params:
+        atr_multiple: 1.5
+    time_exit:
+      enabled: true
+      max_duration_minutes: 120
+      close_before: "14:45"
+
+  risk:
+    max_risk_pct: 1.0
+    min_r_target: 1.5
+    max_daily_trades: 3
+    max_daily_loss_pct: 2.0
+
+  execution:
+    entry_type: "limit"
+    preferred_timeframe: "5m"
+    notes: "Enter on retest of breakout level for better RR. Avoid chasing."
+
+  invalidation:
+    - type: "failed_breakout"
+      description: "Price closes back inside range within 2 bars"
+      params:
+        bars: 2

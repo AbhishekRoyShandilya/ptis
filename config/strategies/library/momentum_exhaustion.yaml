@@ -1,0 +1,96 @@
+strategy:
+  id: "momentum_exhaustion"
+  name: "Momentum Exhaustion Reversal"
+  version: 1
+  description: "Fade overextended moves when momentum shows exhaustion signals (RSI extreme, volume climax, long wick). Edge: mean reversion after unsustainable extension."
+  author: "library"
+  active: true
+  is_library: true
+
+  market_regime:
+    preferred:
+      - high_volatility
+      - mean_reverting
+    neutral:
+      - trending_bullish
+      - trending_bearish
+    avoid:
+      - low_volatility
+      - breakout
+
+  entry:
+    direction: any
+    time_window:
+      start: "09:45"
+      end: "14:00"
+    confirmations:
+      - type: "rsi_extreme"
+        required: true
+        weight: 2.0
+        description: "RSI above 75 (short) or below 25 (long)"
+        params:
+          overbought: 75
+          oversold: 25
+      - type: "price_extension"
+        required: true
+        weight: 2.0
+        description: "Price extended 2.5+ ATR from VWAP"
+        params:
+          min_atr_distance: 2.5
+      - type: "exhaustion_candle"
+        required: false
+        weight: 1.5
+        description: "Long wick rejection candle at extreme"
+        params:
+          min_wick_ratio: 0.6
+      - type: "volume_climax"
+        required: false
+        weight: 1.0
+        description: "Volume spike 3x+ average (climax)"
+        params:
+          min_ratio: 3.0
+    avoid_conditions:
+      - type: "strong_trend"
+        description: "ADX above 35 — trend too strong to fade"
+        params:
+          max_adx: 35
+
+  exit:
+    stop_loss:
+      type: "atr"
+      params:
+        atr_multiple: 1.5
+        side: "beyond_extreme"
+    targets:
+      - r_multiple: 1.0
+        size_pct: 50
+      - r_multiple: 2.0
+        size_pct: 30
+      - r_multiple: 3.0
+        size_pct: 20
+    trailing:
+      enabled: false
+      type: ""
+      activate_at_r: 1.0
+      params: {}
+    time_exit:
+      enabled: true
+      max_duration_minutes: 60
+      close_before: "15:00"
+
+  risk:
+    max_risk_pct: 0.75
+    min_r_target: 1.5
+    max_daily_trades: 3
+    max_daily_loss_pct: 2.0
+
+  execution:
+    entry_type: "limit"
+    preferred_timeframe: "5m"
+    notes: "Counter-trend — smaller size. Take partial profit quickly. Never average down."
+
+  invalidation:
+    - type: "new_extreme"
+      description: "Price makes new extreme beyond entry signal"
+      params:
+        atr_buffer: 0.5

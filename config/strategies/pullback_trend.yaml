@@ -1,0 +1,94 @@
+# pullback_trend.yaml
+# config/strategies/pullback_trend.yaml
+name: pullback_trend
+display_name: "Trend Pullback Entry"
+version: 1
+description: >
+  Enter on pullback to key moving average or structure level
+  in an established trend. Wait for rejection confirmation.
+
+entry_conditions:
+
+  trend_established:
+    type: indicator_condition
+    indicator: ema_alignment
+    fast_period: 9
+    slow_period: 21
+    logic: "aligned_with_trade"    # fast above slow for longs
+    weight: 0.25
+    required: true
+    description: "9 EMA above 21 EMA for longs (below for shorts)"
+
+  pullback_to_level:
+    type: price_condition
+    logic: "touched_level"
+    levels:
+      - ema_21
+      - prior_breakout_level
+      - vwap
+    tolerance_atr: 0.3             # within 0.3 ATR of level
+    weight: 0.30
+    required: true
+    description: "Price has pulled back to key support/resistance level"
+
+  rejection_candle:
+    type: candle_pattern
+    patterns:
+      - hammer
+      - bullish_engulfing
+      - inside_bar_break
+    at_level: true                 # must occur at the pullback level
+    weight: 0.25
+    required: true
+    description: "Rejection/confirmation candle at the pullback level"
+
+  volume_pattern:
+    type: volume_condition
+    compare: "declining_on_pullback"
+    description: "Volume should decrease during pullback"
+    weight: 0.10
+    required: false
+
+  higher_timeframe_trend:
+    type: multi_timeframe
+    higher_tf: "1h"
+    condition: "trend_same_direction"
+    weight: 0.10
+    required: false
+    description: "Higher timeframe trend should confirm"
+
+risk_rules:
+  stop_type: structure
+  stop_reference: swing_low        # below recent swing low for longs
+  stop_buffer_ticks: 3
+  max_risk_percent: 1.0
+  position_sizing: risk_based
+
+exit_rules:
+  primary_target:
+    type: r_multiple
+    value: 2.5
+  trailing_stop:
+    enabled: true
+    activation_r: 1.0
+    trail_method: swing             # trail below/above swing points
+  time_exit:
+    enabled: true
+    exit_before: "15:50"
+
+optimal_conditions:
+  regimes:
+    - trending_up
+    - trending_down
+  sessions:
+    - open
+    - midday
+  volatility: medium
+  best_timeframes:
+    - "5m"
+    - "15m"
+
+tags:
+  - trend_following
+  - pullback
+  - intraday

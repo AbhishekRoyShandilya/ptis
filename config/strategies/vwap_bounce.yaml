@@ -1,0 +1,245 @@
+# config/strategies/vwap_bounce.yaml
+# ═══════════════════════════════════════════════════════
+# STRATEGY DNA: VWAP Bounce
+# ═══════════════════════════════════════════════════════
+
+name: vwap_bounce
+display_name: "VWAP Bounce"
+short_code: VWAP
+version: 2
+category: mean_reversion
+timeframe_primary: "5m"
+timeframe_confirmation: "1m"
+typical_hold: "20-90 minutes"
+description: >
+  Trade bounces off VWAP when price pulls back to it in a trending 
+  day. Wait for confirmation candle (rejection wick or engulfing) 
+  before entering. This is a mean-reversion entry within a trend.
+
+entry_logic:
+  narrative: >
+    On a trending day, price often pulls back to VWAP and bounces.
+    I wait for price to touch or come very close to VWAP, then look 
+    for a rejection candle. I enter on the close of the rejection 
+    candle in the direction of the overall daily trend. I do NOT 
+    fade strong trends — the daily direction must support my trade.
+
+  setup_conditions:
+    - name: "VWAP touch or near-touch"
+      description: "Price comes within 0.1-0.2% of VWAP"
+      importance: critical
+      what_good_looks_like: "Clean touch of VWAP with wicking through"
+      what_bad_looks_like: "Price hovering around VWAP for 30+ min (no clear bounce)"
+
+    - name: "Rejection candle"
+      description: "Hammer, pin bar, or engulfing at VWAP level"
+      importance: critical
+      what_good_looks_like: "Long wick through VWAP, close back above"
+      what_bad_looks_like: "Weak candle, no clear rejection"
+
+    - name: "Daily trend direction matches"
+      description: "Trading in the direction of the day's overall move"
+      importance: critical
+      what_good_looks_like: "Stock trending up, buying the VWAP pullback"
+      what_bad_looks_like: "Stock trending down, trying to buy VWAP bounce"
+
+    - name: "Not in chop zone"
+      description: "Price isn't just oscillating around VWAP with no direction"
+      importance: important
+      what_good_looks_like: "Clear pullback TO VWAP from a move away from it"
+      what_bad_looks_like: "Price has been crossing VWAP back and forth all day"
+
+    - name: "Volume declining on pullback"
+      description: "Pullback to VWAP on lighter volume"
+      importance: preferred
+      what_good_looks_like: "Selling volume decreasing as it approaches VWAP"
+      what_bad_looks_like: "Heavy selling volume driving through VWAP"
+
+  a_plus_conditions:
+    - "First VWAP touch of the day (highest success rate)"
+    - "Strong sector/market trend supporting direction"
+    - "Multiple time frame support at VWAP level"
+    - "Price was above/below VWAP all day, first touch = strong support"
+
+  skip_conditions:
+    - "VWAP has been crossed 4+ times today (no longer support/resistance)"
+    - "ADX > 35 trending against my direction"
+    - "Major news in next 30 minutes"
+    - "End of day (after 3 PM) — VWAP loses relevance"
+    - "Price crashed through VWAP on massive volume"
+
+execution:
+  entry_trigger: "Close of rejection candle at VWAP"
+  entry_timing: "On candle close, not anticipatory"
+  
+  common_mistakes_i_make:
+    - "Buying AT VWAP before seeing rejection (anticipating bounce)"
+    - "Entering when price is chopping around VWAP (no clear bounce)"
+    - "Not waiting for the rejection candle to fully form"
+    - "Taking VWAP bounce against the daily trend direction"
+
+risk:
+  stop_loss:
+    primary_method: "Below rejection candle low + buffer (longs)"
+    description: "Stop goes below the low of the rejection candle with a small buffer"
+    buffer: "5-10 cents"
+    max_stop_distance: "1.5% from entry"
+    common_mistakes:
+      - "Stop too tight — price wicks through and bounces without me"
+      - "Not accounting for VWAP as dynamic — using a static level"
+
+  position_sizing:
+    method: "risk_based"
+    risk_per_trade: "0.75% of account"    # slightly less than ORB
+    max_risk_per_trade: "1% of account"
+    size_adjustments:
+      first_vwap_touch: "Full size (0.75%)"
+      second_touch: "Reduced (0.5%)"
+      third_plus_touch: "Skip or minimal (0.25%)"
+
+  target:
+    primary: "Prior high/low (before pullback)"
+    secondary: "2R if no clear level"
+    method: "Target the swing high/low from before the pullback started"
+
+exit_rules:
+  profit_taking:
+    - trigger: "Price reaches prior swing high/low"
+      action: "Take 75% off"
+    - trigger: "Price reaches 2R"
+      action: "Take remaining"
+  time_based_exit:
+    - trigger: "No movement after 45 minutes"
+      action: "Close at breakeven or small loss"
+    - trigger: "After 3:00 PM"
+      action: "Close position"
+  common_exit_mistakes:
+    - "Holding for more than 2R when momentum is fading"
+    - "Not taking profits at prior swing level"
+
+market_conditions:
+  works_best_in:
+    regimes:
+      - name: trending_up
+        notes: "Best setup — buy pullbacks to VWAP in uptrend"
+        expected_win_rate: "60-70%"
+      - name: trending_down
+        notes: "Short bounces off VWAP in downtrend"
+        expected_win_rate: "55-65%"
+      - name: mean_reverting
+        notes: "VWAP acts as magnet"
+        expected_win_rate: "50-55%"
+    sessions:
+      - name: midday
+        notes: "Midday pullbacks to VWAP are very common"
+      - name: open
+        notes: "After initial move, first pullback to VWAP"
+    additional_conditions:
+      - "Clear trending day established"
+      - "VWAP hasn't been crossed multiple times"
+
+  works_poorly_in:
+    regimes:
+      - name: ranging
+        notes: "VWAP gets chopped through repeatedly"
+        recommendation: "SKIP — no clear trend to bounce with"
+      - name: high_volatility
+        notes: "Price blows through VWAP"
+        recommendation: "SKIP or very wide stops"
+      - name: breakout
+        notes: "During breakout, VWAP is far away — no setup"
+        recommendation: "Use ORB or momentum instead"
+    sessions:
+      - name: power_hour
+        notes: "New flows distort VWAP behavior"
+    additional_conditions:
+      - condition: "VWAP crossed 4+ times"
+        recommendation: "STOP trading VWAP bounces — it's dead"
+      - condition: "Market in free fall"
+        recommendation: "Don't catch falling knives at VWAP"
+
+  regime_sizing:
+    trending_up: "full_size"
+    trending_down: "full_size"
+    mean_reverting: "standard_size"
+    ranging: "skip"
+    high_volatility: "skip"
+    breakout: "skip"
+    low_volatility: "half_size"
+
+psychology:
+  common_emotional_traps:
+    - trap: "Catching falling knife at VWAP"
+      description: "Strong selloff, I buy at VWAP thinking it'll bounce"
+      solution: "WAIT for rejection candle. No candle = no trade."
+      frequency: "happens_often"
+
+    - trap: "Revenge after failed bounce"
+      description: "VWAP bounce fails, I try again immediately"
+      solution: "After failed VWAP bounce, strategy is DONE for the day on that stock"
+      frequency: "sometimes"
+
+    - trap: "Anticipating the bounce"
+      description: "I enter before price even touches VWAP"
+      solution: "Only enter AFTER rejection candle closes"
+      frequency: "happens_often"
+
+  ideal_mental_state:
+    - "Patient — waiting for price to come to MY level"
+    - "Non-anticipatory — no guessing, only reacting"
+    - "Accepting — if it doesn't bounce, that's okay"
+
+  do_not_trade_when:
+    - "I've already had 2 failed VWAP bounces today"
+    - "I'm trying to 'catch the bottom'"
+    - "Market is in panic mode"
+
+relationships:
+  fallback_strategies:
+    - strategy: trend_continuation
+      condition: "VWAP bounce works and establishes trend continuation"
+    - strategy: supply_demand_zone
+      condition: "VWAP aligns with a demand/supply zone"
+
+  conflicts_with:
+    - strategy: scalp_momentum
+      reason: "Don't scalp momentum while waiting for VWAP bounce"
+
+  regime_alternatives:
+    ranging: "range_fade"
+    high_volatility: "scalp_momentum"
+    breakout: "opening_range_breakout"
+
+personal_insights:
+  strengths:
+    - "I'm patient waiting for VWAP touches"
+    - "My first VWAP bounce of the day is usually good"
+  weaknesses:
+    - "I take too many VWAP bounces — 3rd and 4th touch fail"
+    - "I anticipate bounces instead of waiting for confirmation"
+    - "I struggle with VWAP bounces on short side"
+  edge_conditions:
+    - "First touch of the day is my best setup"
+    - "Works much better when I confirm with 1-min candle pattern"
+  learned_statistics:
+    total_trades: null
+    win_rate: null
+    avg_r: null
+    best_regime: null
+    worst_regime: null
+    last_updated: null
+
+checklist:
+  - "Price has touched or come within 0.1% of VWAP"
+  - "Rejection candle formed (hammer/engulfing/pin)"
+  - "Daily trend supports my trade direction"
+  - "Not in chop zone (clear pullback, not oscillation)"
+  - "This is 1st or 2nd VWAP touch today"
+  - "Stop below rejection candle low + buffer"
+  - "Target at prior swing high/low"
+
+tags:
+  - mean_reversion
+  - vwap
+  - intraday
+  - trend_pullback

@@ -1,0 +1,91 @@
+@import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&family=Space+Grotesk:wght@300;400;500;600;700&display=swap');
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+
+html {
+  font-family: 'Space Grotesk', system-ui, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+body {
+  background-color: #0A0E17;
+  color: #F1F5F9;
+  overflow-x: hidden;
+}
+
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+  width: 4px;
+  height: 4px;
+}
+::-webkit-scrollbar-thumb {
+  background: #2A3050;
+  border-radius: 999px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+/* Selection */
+::selection {
+  background: rgba(139, 92, 246, 0.3);
+  color: #F1F5F9;
+}
+
+/* Number font */
+.font-num {
+  font-family: 'JetBrains Mono', monospace;
+}
+
+/* Glow effects */
+.glow-green { box-shadow: 0 0 16px rgba(16, 185, 129, 0.2); }
+.glow-purple { box-shadow: 0 0 16px rgba(139, 92, 246, 0.25); }
+.glow-red { box-shadow: 0 0 16px rgba(239, 68, 68, 0.2); }
+.glow-amber { box-shadow: 0 0 16px rgba(245, 158, 11, 0.2); }
+
+/* AI Gradient */
+.ai-gradient {
+  background: linear-gradient(135deg, #8B5CF6, #3B82F6);
+}
+.ai-gradient-text {
+  background: linear-gradient(135deg, #A78BFA, #60A5FA);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+/* Card base */
+.card {
+  background: #1A2035;
+  border: 1px solid #2A3050;
+  border-radius: 12px;
+}
+
+/* Fade animations */
+.animate-fade-in {
+  animation: fadeIn 0.3s ease-out;
+}
+.animate-slide-up {
+  animation: slideUp 0.25s ease-out;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+@keyframes slideUp {
+  from { opacity: 0; transform: translateY(6px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* Pulse dot */
+.pulse-dot {
+  animation: pulseDot 2s ease-in-out infinite;
+}
+@keyframes pulseDot {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.5; transform: scale(0.85); }
+}

@@ -1,0 +1,407 @@
+# config/strategies/opening_range_breakout.yaml
+# ═══════════════════════════════════════════════════════
+# STRATEGY DNA: Opening Range Breakout
+# Last Updated: 2024-01-15
+# Version: 3
+# ═══════════════════════════════════════════════════════
+
+# ─────────────────────────────
+# IDENTITY
+# ─────────────────────────────
+name: opening_range_breakout
+display_name: "Opening Range Breakout (ORB)"
+short_code: ORB
+version: 3
+category: momentum            # momentum, mean_reversion, trend, scalp, swing, catalyst
+timeframe_primary: "5m"       # primary chart timeframe you use
+timeframe_confirmation: "1m"  # confirmation timeframe (if any)
+typical_hold: "15-60 minutes"
+description: >
+  Trade the breakout above or below the opening range defined by
+  the first 15 minutes of market open. Enter on the first candle
+  close outside the range with volume confirmation. Best when
+  market has a directional bias from pre-market.
+
+
+# ─────────────────────────────
+# WHAT I LOOK FOR (Entry Logic)
+# Your complete thought process
+# ─────────────────────────────
+entry_logic:
+
+  narrative: >
+    I wait for the first 15 minutes to form a clear range. I mark
+    the high and low. Then I wait for a candle to CLOSE above the
+    range high (for longs) or below the range low (for shorts).
+    I need to see volume pick up on the breakout candle. I prefer
+    when there's a pre-market direction bias — like a gap up with
+    the breakout going in the gap direction.
+
+  setup_conditions:
+    - name: "Opening range defined"
+      description: "First 15-min high/low creates clear, not too wide range"
+      importance: critical          # critical, important, preferred, nice_to_have
+      what_good_looks_like: "Range is 0.5-2% of price, clear high and low"
+      what_bad_looks_like: "Range is too wide (>3%) or no clear boundaries"
+
+    - name: "Candle close beyond range"
+      description: "5-min candle closes above high (long) or below low (short)"
+      importance: critical
+      what_good_looks_like: "Strong close, not just a wick poke"
+      what_bad_looks_like: "Just a wick above, body still inside range"
+
+    - name: "Volume confirmation"
+      description: "Breakout candle has noticeably higher volume than range candles"
+      importance: important
+      what_good_looks_like: "1.5x+ average volume, visible spike on chart"
+      what_bad_looks_like: "Same or lower volume — weak breakout"
+
+    - name: "Pre-market bias alignment"
+      description: "Gap direction or pre-market trend supports breakout direction"
+      importance: preferred
+      what_good_looks_like: "Stock gapped up, breaking out to upside"
+      what_bad_looks_like: "Stock gapped down but trying to break upside"
+
+    - name: "No immediate resistance"
+      description: "No major level within 1 ATR in the breakout direction"
+      importance: preferred
+      what_good_looks_like: "Clean space above for price to move"
+      what_bad_looks_like: "Previous day's high sitting right above range"
+
+    - name: "Market direction supports"
+      description: "SPY/QQQ trend matches my trade direction"
+      importance: nice_to_have
+      what_good_looks_like: "SPY also breaking out, broad strength"
+      what_bad_looks_like: "My stock breaking up while SPY dumps"
+
+  # Things that make this setup EXTRA good
+  a_plus_conditions:
+    - "Gap in direction of breakout with pre-market volume"
+    - "Relative volume > 3x before market open"
+    - "Sector momentum supporting the direction"
+    - "News catalyst driving the move"
+    - "Tight consolidation range (< 1% of price)"
+
+  # Things that make me SKIP even if basics are met
+  skip_conditions:
+    - "Opening range wider than 3% of price"
+    - "Already 3+ failed breakout attempts"
+    - "Major earnings/FOMC in next 2 hours"
+    - "Stock already extended 5%+ pre-market"
+    - "Low relative volume pre-market"
+    - "Choppy/whipsaw price action in range"
+
+
+# ─────────────────────────────
+# HOW I ENTER (Execution Rules)
+# ─────────────────────────────
+execution:
+
+  entry_trigger: "Candle close beyond range level"
+  entry_timing: "On close of breakout candle, not mid-candle"
+  
+  common_mistakes_i_make:
+    - "Entering before candle closes (chasing the wick)"
+    - "Entering on the 2nd or 3rd candle when I missed the first"
+    - "Entering without checking volume"
+    - "Entering when range is too wide (greed)"
+
+  ideal_entry_description: >
+    I enter at market price as soon as the 5-min breakout candle 
+    closes. I should already have my order ready. If I miss the 
+    close by more than 0.3%, I skip the trade or wait for a 
+    pullback to the range level.
+
+
+# ─────────────────────────────
+# RISK MANAGEMENT
+# ─────────────────────────────
+risk:
+
+  stop_loss:
+    primary_method: "Opposite side of opening range"
+    description: >
+      For longs, stop goes below the opening range low.
+      For shorts, stop goes above the opening range high.
+    buffer: "2-5 cents below the range level"
+    max_stop_distance: "2% from entry"
+    
+    # What I actually do vs what I should do
+    common_mistakes:
+      - "Moving stop to breakeven too early (before 1R)"
+      - "Widening stop when price comes back to range"
+      - "Using mental stop instead of hard stop"
+
+  position_sizing:
+    method: "risk_based"            # risk_based, fixed_shares, fixed_dollar
+    risk_per_trade: "1% of account"
+    max_risk_per_trade: "1.5% of account"
+    
+    size_adjustments:
+      a_plus_setup: "Full size (1%)"
+      standard_setup: "Standard size (0.75%)"
+      marginal_setup: "Reduced size (0.5%)"
+      unfavorable_conditions: "Skip or 0.25%"
+
+  target:
+    primary: "2R minimum"
+    secondary: "3R if momentum continues"
+    method: >
+      First target at 2x the risk distance. If price reaches 2R
+      with strong momentum, I trail stop to 1R and let rest run
+      for 3R or end of move.
+
+
+# ─────────────────────────────
+# EXIT RULES
+# ─────────────────────────────
+exit_rules:
+
+  profit_taking:
+    - trigger: "Price reaches 2R"
+      action: "Take 50% off, move stop to breakeven"
+    - trigger: "Price reaches 3R"
+      action: "Take remaining, or trail tightly"
+    - trigger: "Momentum fading (volume dropping, candles shrinking)"
+      action: "Tighten stop to protect profits"
+
+  stop_loss_exit:
+    - "Hard stop at planned level — NO EXCEPTIONS"
+    - "If stop level invalidated before entry, cancel trade"
+
+  time_based_exit:
+    - trigger: "Trade not moving after 30 minutes"
+      action: "Consider closing at breakeven or small loss"
+    - trigger: "After 2:00 PM if less than 1R profit"
+      action: "Close position — ORB works best in morning"
+    - trigger: "3:45 PM"
+      action: "Close all remaining — no overnight holds"
+
+  emergency_exit:
+    - "Unexpected news drops"
+    - "Flash crash / circuit breaker"
+    - "Account hitting daily loss limit"
+
+  common_exit_mistakes:
+    - "Exiting at 1R because of fear (leaving money on table)"
+    - "Not taking profits at 2R and watching it reverse"
+    - "Moving stop to breakeven at 0.5R (too early)"
+    - "Holding past 2 PM hoping for more"
+
+
+# ─────────────────────────────
+# MARKET CONDITIONS
+# Where this strategy thrives/fails
+# ─────────────────────────────
+market_conditions:
+
+  works_best_in:
+    regimes:
+      - name: trending_up
+        notes: "Strong bullish days, breakouts follow through"
+        expected_win_rate: "55-65%"
+      - name: trending_down
+        notes: "Short breakdowns work well on weak days"
+        expected_win_rate: "50-60%"
+      - name: breakout
+        notes: "Volatility expansion from compression — ideal"
+        expected_win_rate: "60-70%"
+      - name: low_volatility
+        notes: "Compression before expansion — look for squeeze"
+        expected_win_rate: "50-60%"
+
+    sessions:
+      - name: open
+        notes: "First 30 min after range forms is best"
+        expected_win_rate: "55-65%"
+
+    additional_conditions:
+      - "Clear pre-market direction/gap"
+      - "High relative volume (RVOL > 2)"
+      - "Sector showing strength/weakness in same direction"
+      - "VIX between 15-30 (enough vol, not chaos)"
+
+  works_poorly_in:
+    regimes:
+      - name: ranging
+        notes: "Breakouts fail and reverse — many fakeouts"
+        expected_win_rate: "25-35%"
+        recommendation: "SKIP or half size"
+      - name: high_volatility
+        notes: "Whipsaws through range, stops hit frequently"
+        expected_win_rate: "30-40%"
+        recommendation: "SKIP or widen stops (changes R:R)"
+      - name: mean_reverting
+        notes: "Price breaks out then reverts — frustrating"
+        expected_win_rate: "30-35%"
+        recommendation: "SKIP this strategy, use VWAP bounce instead"
+
+    sessions:
+      - name: midday
+        notes: "Low volume, false breakouts"
+        recommendation: "AVOID ORB after 11:30 AM"
+      - name: power_hour
+        notes: "Different dynamic, not a clean ORB"
+        recommendation: "Use trend_continuation instead"
+
+    additional_conditions:
+      - condition: "FOMC / CPI / Jobs day"
+        recommendation: "SKIP until after announcement"
+      - condition: "Pre-market volume very low"
+        recommendation: "SKIP — no conviction behind the range"
+      - condition: "Triple witching / OpEx"
+        recommendation: "Half size — unusual price action"
+      - condition: "Monday morning"
+        recommendation: "Wait extra 5 min — gaps often fill on Monday"
+
+  # Specific regime-based sizing guidance
+  regime_sizing:
+    trending_up: "full_size"
+    trending_down: "full_size"
+    breakout: "full_size"
+    low_volatility: "standard_size"
+    ranging: "skip_or_quarter_size"
+    high_volatility: "half_size_wider_stop"
+    mean_reverting: "skip"
+
+
+# ─────────────────────────────
+# PSYCHOLOGY & BEHAVIORAL TRAPS
+# Strategy-specific pitfalls
+# ─────────────────────────────
+psychology:
+
+  common_emotional_traps:
+    - trap: "FOMO on missed breakout"
+      description: "I see it break out and chase 3 candles later"
+      solution: "If I missed the close, I wait for pullback to range or skip"
+      frequency: "happens_often"     # happens_often, sometimes, rarely
+
+    - trap: "Revenge after fakeout"
+      description: "Breakout fails, I immediately flip direction"
+      solution: "After a fakeout, wait 15 min before next trade"
+      frequency: "sometimes"
+
+    - trap: "Widening stop on pullback"
+      description: "Price comes back to range, I move stop wider"
+      solution: "Stop is set at entry. NEVER widen. Accept the loss."
+      frequency: "sometimes"
+
+    - trap: "Over-trading on active days"
+      description: "Many ORBs setting up, I take too many"
+      solution: "Maximum 2 ORB trades per day. Pick the best."
+      frequency: "happens_often"
+
+    - trap: "Exiting too early out of fear"
+      description: "Up 1R and I close because I'm scared of reversal"
+      solution: "Follow exit rules. At 1.5R, trail stop. Don't panic close."
+      frequency: "happens_often"
+
+  # What mental state should I be in for this strategy?
+  ideal_mental_state:
+    - "Patient — waiting for the range to form completely"
+    - "Decisive — entering immediately on candle close"
+    - "Detached — letting the trade hit stop or target"
+    - "Disciplined — following size rules regardless of conviction"
+
+  # When should I NOT trade this strategy regardless of setup?
+  do_not_trade_when:
+    - "I'm frustrated from previous losses"
+    - "I'm euphoric from big win (tend to oversize)"
+    - "I slept less than 5 hours"
+    - "I'm trying to 'make back' money"
+    - "I'm bored and looking for action"
+
+
+# ─────────────────────────────
+# STRATEGY RELATIONSHIPS
+# How this connects to other strategies
+# ─────────────────────────────
+relationships:
+
+  # If ORB fails, what strategy might work instead?
+  fallback_strategies:
+    - strategy: vwap_bounce
+      condition: "ORB fails and price returns to VWAP"
+      notes: "After failed breakout, often get a VWAP bounce trade"
+
+    - strategy: range_fade
+      condition: "Multiple failed breakouts"
+      notes: "If range holds 3x, fade the next breakout attempt"
+
+  # Which strategies conflict (shouldn't trade both same time)?
+  conflicts_with:
+    - strategy: range_fade
+      reason: "Can't be both breakout and fade at same time"
+
+  # Which strategies complement this one?
+  pairs_well_with:
+    - strategy: trend_continuation
+      reason: "After ORB breakout, trend continuation can extend the move"
+
+  # If the market isn't right for this, suggest alternatives
+  regime_alternatives:
+    ranging: "vwap_bounce or range_fade"
+    high_volatility: "scalp_momentum with tight stops"
+    mean_reverting: "vwap_bounce"
+
+
+# ─────────────────────────────
+# HISTORICAL SELF-KNOWLEDGE
+# What you've learned about YOUR execution
+# Updated over time (manually or by system)
+# ─────────────────────────────
+personal_insights:
+
+  strengths:
+    - "I'm good at identifying clean ranges"
+    - "My entries on the first candle close are usually well-timed"
+    - "I handle losing ORB trades without tilting (usually)"
+
+  weaknesses:
+    - "I chase when I miss the initial breakout"
+    - "I take too many ORBs on active days instead of picking best"
+    - "I struggle to hold for 2R+ — tend to exit at 1-1.5R"
+    - "On Mondays, I enter too early before gap fill completes"
+
+  edge_conditions:
+    - "My win rate is highest when RVOL > 3 and gap > 2%"
+    - "I perform best on the FIRST ORB of the day"
+    - "My ORB shorts are weaker than my longs"
+
+  # These get auto-updated by the learning system
+  learned_statistics:
+    total_trades: null           # filled by system
+    win_rate: null
+    avg_r: null
+    best_regime: null
+    worst_regime: null
+    best_session_time: null
+    avg_hold_minutes: null
+    last_updated: null
+
+
+# ─────────────────────────────
+# CHECKLIST (for UI)
+# Quick checklist shown before trade entry
+# ─────────────────────────────
+checklist:
+  - "Opening range (15 min) is clear and defined"
+  - "Candle CLOSED beyond range (not just wick)"
+  - "Volume confirms breakout (above average)"
+  - "No major S/R blocking within 1 ATR"
+  - "Pre-market bias supports direction"
+  - "Stop placed at opposite side of range"
+  - "Position sized to max 1% risk"
+  - "It's before 11:30 AM"
+  - "This is my 1st or 2nd ORB today (max 2)"
+
+# ─────────────────────────────
+# TAGS
+# ─────────────────────────────
+tags:
+  - momentum
+  - opening
+  - breakout
+  - intraday
+  - high_frequency

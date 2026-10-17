@@ -1,0 +1,102 @@
+# vwap_reversal.yaml
+# config/strategies/vwap_reversal.yaml
+name: vwap_reversal
+display_name: "VWAP Mean Reversion"
+version: 1
+description: >
+  Fade extended moves back to VWAP. Enter when price reaches
+  2+ standard deviations from VWAP with reversal candle confirmation.
+
+entry_conditions:
+
+  time_window:
+    type: time_range
+    start: "10:00"
+    end: "15:00"
+    timezone: "US/Eastern"
+    weight: 0.10
+    required: false
+    description: "Best after initial range is established"
+
+  vwap_deviation:
+    type: indicator_condition
+    indicator: vwap_bands
+    logic: "price_beyond_band"
+    band_stddev: 2.0
+    direction: "against_trade"     # price extended AGAINST the trade direction (fade)
+    weight: 0.35
+    required: true
+    description: "Price must be at least 2 std devs from VWAP"
+
+  reversal_candle:
+    type: candle_pattern
+    patterns:
+      - hammer
+      - engulfing
+      - pin_bar
+      - doji_at_extreme
+    weight: 0.25
+    required: true
+    description: "Reversal candle pattern at extreme"
+
+  volume_climax:
+    type: volume_condition
+    compare: "spike_then_decline"
+    spike_ratio: 2.0
+    weight: 0.15
+    required: false
+    description: "Volume climax followed by declining volume"
+
+  rsi_extreme:
+    type: indicator_condition
+    indicator: rsi
+    period: 14
+    logic: "below_if_long"
+    threshold: 30                  # RSI below 30 for long entries
+    weight: 0.15
+    required: false
+    description: "RSI confirms oversold/overbought"
+
+risk_rules:
+  stop_type: atr
+  stop_atr_multiplier: 1.5
+  max_risk_percent: 0.75          # tighter risk for mean reversion
+  position_sizing: risk_based
+
+exit_rules:
+  primary_target:
+    type: indicator_level
+    indicator: vwap
+    description: "Exit at VWAP"
+  secondary_target:
+    type: r_multiple
+    value: 2.0
+  trailing_stop:
+    enabled: false
+  time_exit:
+    enabled: true
+    max_hold_minutes: 120
+
+optimal_conditions:
+  regimes:
+    - ranging
+    - mean_reverting
+    - high_volatility
+  sessions:
+    - midday
+  volatility: high
+  best_timeframes:
+    - "5m"
+    - "15m"
+
+filters:
+  - type: regime_filter
+    exclude_regimes:
+      - trending_up
+      - trending_down
+    description: "Do not fade strong trends"
+
+tags:
+  - mean_reversion
+  - intraday
+  - counter_trend

@@ -1,0 +1,417 @@
+# config/strategies/momentum_exhaustion_reversal.yaml
+# ═══════════════════════════════════════════════════════
+# STRATEGY DNA: Momentum Exhaustion Reversal (MER)
+# Last Updated: 2026-03-11
+# Version: 2
+# ═══════════════════════════════════════════════════════
+
+# ─────────────────────────────
+# IDENTITY
+# ─────────────────────────────
+name: momentum_exhaustion_reversal
+display_name: "Momentum Exhaustion Reversal (MER)"
+short_code: MER
+version: 2
+category: mean_reversion
+timeframe_primary: "15m"
+timeframe_confirmation: "5m"
+typical_hold: "30-120 minutes"
+description: >
+  Detects momentum exhaustion after a strong directional candle (C1).
+  A large green candle followed by progressively smaller green/doji candles
+  signals buying exhaustion. Entry is SHORT on a live price break below the
+  reference low of the last meaningful exhaustion candle (not candle close).
+  Mirror long pattern exists but is conditional on strong bullish or
+  extremely oversold regime only. Works on both 15m and 5m timeframes.
+  Stop loss is the high of the candle immediately before the trigger candle,
+  giving tight risk-reward. Indian market (NSE) focused — must exit by 15:15 IST.
+
+
+# ─────────────────────────────
+# WHAT I LOOK FOR (Entry Logic)
+# ─────────────────────────────
+entry_logic:
+
+  narrative: >
+    I look for a large momentum candle (C1) — green for bearish setup, red
+    for bullish. After C1, I watch for progressively smaller candles (C2, C3,
+    C4...) that show the momentum is dying. When I see a doji or tiny candle,
+    I know the system is "armed." I then monitor real-time price (tick or 1s)
+    for the moment price breaks below the low of the last meaningful
+    exhaustion candle. That live break is my SHORT entry. I do NOT wait for
+    the 15-minute candle to close. For the mirror long, I need the regime to
+    be clearly strong bullish or extremely oversold — otherwise I skip it
+    entirely. This pattern also works well on the 5-minute timeframe for
+    faster setups with tighter stops.
+
+  setup_conditions:
+    - name: "Strong momentum candle (C1)"
+      description: "Large directional candle — green for short setup, red for long setup"
+      importance: critical
+      what_good_looks_like: "Body 0.3-0.7% for index, 0.5-2.0% for stocks, clear directional move"
+      what_bad_looks_like: "Doji, small body, or excessively large (>1% index / >3% stock)"
+
+    - name: "Progressively smaller candles"
+      description: "C2 is smaller than C1, subsequent candles diminish further — showing exhaustion"
+      importance: critical
+      what_good_looks_like: "C2 body is 15-85% of C1, then each candle smaller or doji"
+      what_bad_looks_like: "C2 larger than C1, or a significant opposite-color candle in the zone"
+
+    - name: "Exhaustion confirmation (doji/tiny candle)"
+      description: "At least one doji or tiny candle (body < 20% of C1) in the exhaustion zone"
+      importance: important
+      what_good_looks_like: "Clear doji or spinning top, body barely visible"
+      what_bad_looks_like: "All candles have meaningful bodies — no real exhaustion signal"
+
+    - name: "Live price break of reference low/high"
+      description: "Price breaks below reference low (short) or above reference high (long) in real time"
+      importance: critical
+      what_good_looks_like: "Clean break during red candle formation, current candle is red"
+      what_bad_looks_like: "Just a wick poke, candle reverses and closes green"
+
+    - name: "Flat/small gap at open"
+      description: "Gap from previous close is manageable — <0.6% index, <1.5% stock"
+      importance: preferred
+      what_good_looks_like: "Gap <0.3%, or gap in direction of C1"
+      what_bad_looks_like: "Large gap >1% that distorts C1 reading"
+
+    - name: "Pattern completes within 3-8 candles"
+      description: "Total pattern from C1 to trigger is 3-8 candles (not too fast, not dragging)"
+      importance: important
+      what_good_looks_like: "4-6 candle pattern with clear diminishing sequence"
+      what_bad_looks_like: "Pattern drags beyond 8 candles — momentum context is stale"
+
+  a_plus_conditions:
+    - "C1 has above-average volume and subsequent candles have declining volume"
+    - "Exhaustion zone stays within C1's range (no new high made)"
+    - "Multiple dojis in sequence — extreme exhaustion"
+    - "Pattern forms in first 90 minutes of session (9:15-10:45 IST)"
+    - "Regime supports the direction (downtrend for shorts, strong uptrend for longs)"
+    - "5m timeframe shows same pattern confirming the 15m setup"
+
+  skip_conditions:
+    - "Gap exceeds 0.6% (index) or 1.5% (stock) and gap_strict is on"
+    - "C1 body is too small (<0.3% index, <0.5% stock) — not enough momentum"
+    - "C2 is larger than C1 — momentum increasing, not exhausting"
+    - "A significant opposite-color candle appears in exhaustion zone"
+    - "Pattern hasn't completed by 11:15 IST — too late"
+    - "Mirror long attempted but regime is not strong_bullish or extremely_oversold"
+    - "More than 8 candles since C1 — pattern expired"
+    - "Major news event or RBI announcement imminent"
+
+
+# ─────────────────────────────
+# HOW I ENTER (Execution Rules)
+# ─────────────────────────────
+execution:
+
+  entry_trigger: "Live price break below reference low (short) or above reference high (long)"
+  entry_timing: >
+    LIVE BREAK — not candle close. The moment real-time price breaks below the
+    low of the last meaningful (non-doji) exhaustion candle, entry is triggered.
+    This requires tick or 1-second data monitoring. Works on both 15m and 5m charts.
+
+  common_mistakes_i_make:
+    - "Waiting for the 15m candle to close instead of entering on live break"
+    - "Using C1's high as stop loss instead of the candle before the trigger"
+    - "Taking the mirror long in unclear or mildly bullish regimes"
+    - "Entering when exhaustion zone has only 1 candle (C2 alone, no confirmation)"
+    - "Ignoring the pattern on 5m when 15m hasn't formed yet"
+
+  ideal_entry_description: >
+    The system is armed after seeing diminishing candles + doji. I have my
+    reference low marked. The moment a red candle's price ticks below that
+    level, I enter short immediately. My stop is already calculated (high of
+    the candle before this trigger candle + 3 pts buffer for index). Position
+    size is pre-computed based on risk. I don't hesitate — the break is my edge.
+
+
+# ─────────────────────────────
+# RISK MANAGEMENT
+# ─────────────────────────────
+risk:
+
+  stop_loss:
+    primary_method: "High of candle before trigger candle"
+    description: >
+      Stop loss is the HIGH of the candle immediately before the red trigger
+      candle. NOT the high of C1. This is the last exhaustion candle — its
+      high represents the last gasp of buying. If price exceeds that level,
+      the exhaustion thesis is dead. Buffer: +3 index points or +0.05% for
+      stocks. Same logic applies on 5m timeframe with tighter absolute stops.
+    buffer: "3 index points or 0.05% for stocks"
+    max_stop_distance: "SL is inherently tight — no max needed"
+
+    common_mistakes:
+      - "Using C1's high as stop (too wide, poor R:R)"
+      - "No buffer — getting stopped by 1 tick above the candle high"
+      - "Moving stop wider when price approaches it"
+
+  position_sizing:
+    method: "risk_based"
+    risk_per_trade: "1% of account"
+    max_risk_per_trade: "1.5% of account"
+
+    size_adjustments:
+      a_plus_setup: "Full size (1%)"
+      standard_setup: "Standard size (0.75%)"
+      marginal_setup: "Reduced size (0.5%)"
+      mirror_long: "Reduced size (0.5%) — conditional pattern"
+      unfavorable_conditions: "Skip"
+
+  target:
+    primary: "1R — book 50% at 1:1 risk-reward"
+    secondary: "2R — book 25% more at 1:2"
+    method: >
+      With the tight stop (candle-before-trigger high), R:R targets are very
+      achievable. 50% exits at 1R, another 25% at 2R. Remaining 25% rides
+      with a trailing stop (trail to high of each new 15m/5m candle after 1R).
+      All positions must close by 15:15 IST regardless.
+
+
+# ─────────────────────────────
+# EXIT RULES
+# ─────────────────────────────
+exit_rules:
+
+  profit_taking:
+    - trigger: "Price reaches 1R (1:1 risk-reward)"
+      action: "Book 50% of position"
+    - trigger: "Price reaches 2R (1:2 risk-reward)"
+      action: "Book 25% more"
+    - trigger: "After 1R, each new candle closes"
+      action: "Trail stop to high of previous completed candle (remaining 25%)"
+
+  stop_loss_exit:
+    - "Hard stop at candle-before-trigger high + buffer — NO EXCEPTIONS"
+    - "If SL level is breached, exit immediately — do not wait for candle close"
+
+  time_based_exit:
+    - trigger: "15:15 IST"
+      action: "Close ALL remaining position — no overnight holds"
+    - trigger: "Trade not moving for 4+ candles after entry"
+      action: "Consider closing at breakeven or small loss — pattern may be invalid"
+
+  emergency_exit:
+    - "Sudden spike in VIX / India VIX"
+    - "Circuit breaker or trading halt"
+    - "Account hitting daily loss limit"
+
+  common_exit_mistakes:
+    - "Not booking at 1R and watching it reverse to stop"
+    - "Exiting everything at 1R — leaving the trailing portion on the table"
+    - "Holding past 15:15 hoping for more"
+    - "Manually overriding the trailing stop because 'it looks like it will reverse'"
+
+
+# ─────────────────────────────
+# MARKET CONDITIONS
+# ─────────────────────────────
+market_conditions:
+
+  works_best_in:
+    regimes:
+      - name: trending_down
+        notes: "Short pattern thrives in downtrends — exhaustion rallies fail and reverse"
+        expected_win_rate: "55-65%"
+      - name: ranging
+        notes: "Range-bound markets produce reliable exhaustion at range edges"
+        expected_win_rate: "50-60%"
+      - name: high_volatility
+        notes: "Volatile markets produce clear exhaustion patterns with good R:R"
+        expected_win_rate: "50-55%"
+      - name: trending_up
+        notes: "Mirror LONG works here — buying exhaustion dips in uptrend"
+        expected_win_rate: "50-60%"
+
+    sessions:
+      - name: morning
+        notes: "First 90 minutes — cleanest exhaustion patterns"
+        expected_win_rate: "55-65%"
+
+    additional_conditions:
+      - "C1 has clearly above-average volume"
+      - "Exhaustion candles show declining volume"
+      - "No major support/resistance in the immediate path of the trade"
+      - "India VIX in 12-25 range (enough movement, not chaotic)"
+
+  works_poorly_in:
+    regimes:
+      - name: breakout
+        notes: "Strong breakout continuation negates exhaustion thesis"
+        expected_win_rate: "30-40%"
+        recommendation: "SKIP — momentum may continue through exhaustion"
+      - name: low_volatility
+        notes: "Small candles make C1 look exhausted by default — false signals"
+        expected_win_rate: "35-45%"
+        recommendation: "SKIP or half size — pattern less meaningful"
+
+    sessions:
+      - name: midday
+        notes: "Low volume creates ambiguous exhaustion — false signals"
+        recommendation: "AVOID after 11:30 IST"
+      - name: close
+        notes: "Last 30 minutes too unpredictable for new entries"
+        recommendation: "Only manage existing positions"
+
+    additional_conditions:
+      - condition: "Major news / RBI announcement"
+        recommendation: "SKIP — price action driven by event, not exhaustion"
+      - condition: "Very low volume day (holiday-adjacent)"
+        recommendation: "SKIP — exhaustion patterns unreliable"
+      - condition: "Mirror long in mild/unclear regime"
+        recommendation: "SKIP long — only trade long in strong_bullish or extremely_oversold"
+
+  regime_sizing:
+    trending_up: "half_size"              # Short pattern weaker in uptrend; long conditional
+    trending_down: "full_size"            # Short pattern thrives
+    ranging: "standard_size"
+    breakout: "skip"                       # Momentum may continue
+    mean_reverting: "full_size"           # Exhaustion = mean reversion signal
+    high_volatility: "standard_size"
+    low_volatility: "skip_or_quarter_size"
+
+
+# ─────────────────────────────
+# PSYCHOLOGY & BEHAVIORAL TRAPS
+# ─────────────────────────────
+psychology:
+
+  common_emotional_traps:
+    - trap: "Anticipating the break before it happens"
+      description: "I see the doji and enter short before price actually breaks the reference low"
+      solution: "Wait for the ACTUAL break. The system is armed but not triggered. Discipline."
+      frequency: "happens_often"
+
+    - trap: "Taking mirror long without regime check"
+      description: "I see a red C1 with exhaustion and go long automatically"
+      solution: "Mirror long is CONDITIONAL. Check regime first. If not strong_bullish/oversold, SKIP."
+      frequency: "sometimes"
+
+    - trap: "Using C1 high as stop loss (wider SL, poor R:R)"
+      description: "Old habit — placing SL at C1's high instead of candle-before-trigger"
+      solution: "SL = high of candle[trigger_index - 1]. Always. The corrected version gives better R:R."
+      frequency: "sometimes"
+
+    - trap: "FOMO on missed pattern"
+      description: "Pattern formed but I didn't enter on the break — I chase 2 candles later"
+      solution: "If the live break is missed, the entry is gone. Wait for the next pattern."
+      frequency: "happens_often"
+
+    - trap: "Doubting the pattern after multiple failures"
+      description: "2-3 losses and I stop taking signals even when pattern is clean"
+      solution: "Each pattern is independent. If the setup is A+, take it regardless of recent results."
+      frequency: "sometimes"
+
+  ideal_mental_state:
+    - "Patient — waiting for the full exhaustion sequence to develop"
+    - "Alert — monitoring live price once armed (tick-level attention)"
+    - "Mechanical — entering on the break without hesitation"
+    - "Disciplined — stop is fixed, targets are pre-set, no manual overrides"
+    - "Regime-aware — checking context before taking mirror long"
+
+  do_not_trade_when:
+    - "I'm frustrated from previous losses and want to 'make it back'"
+    - "I slept less than 5 hours — reaction time matters for live breaks"
+    - "I don't have access to tick/1s data (can't monitor live break)"
+    - "I'm distracted and can't give full attention during armed state"
+    - "It's past 11:15 IST and no pattern has formed yet"
+
+
+# ─────────────────────────────
+# STRATEGY RELATIONSHIPS
+# ─────────────────────────────
+relationships:
+
+  fallback_strategies:
+    - strategy: vwap_reversal
+      condition: "MER fails and price returns to VWAP"
+      notes: "Failed exhaustion often leads to VWAP retest — use VWAP reversal"
+    - strategy: trend_continuation
+      condition: "C1 momentum continues without exhaustion"
+      notes: "If no exhaustion forms, ride the trend instead of fighting it"
+
+  conflicts_with:
+    - strategy: momentum_continuation
+      reason: "MER shorts momentum; momentum continuation rides it — opposite thesis"
+    - strategy: opening_range_breakout
+      reason: "If ORB triggers in same direction as C1, don't short the breakout"
+
+  pairs_well_with:
+    - strategy: vwap_reversal
+      reason: "Both are mean-reversion — MER at candle level, VWAP at session level"
+    - strategy: range_fade
+      reason: "MER can confirm range fade entries at range extremes"
+
+  regime_alternatives:
+    breakout: "trend_continuation or opening_range_breakout"
+    low_volatility: "scalp_momentum with tight stops"
+    trending_up: "pullback_trend (if mirror long regime doesn't qualify)"
+
+
+# ─────────────────────────────
+# HISTORICAL SELF-KNOWLEDGE
+# ─────────────────────────────
+personal_insights:
+
+  strengths:
+    - "I read exhaustion candle sequences well — pattern recognition is strong"
+    - "The tight SL (candle-before-trigger) gives excellent R:R"
+    - "Works consistently on Nifty/BankNifty in morning session"
+    - "Pattern is well-defined — less subjective than other setups"
+
+  weaknesses:
+    - "I sometimes anticipate the break and enter early (before live break)"
+    - "I take mirror longs without proper regime check"
+    - "After 2-3 losses I start doubting clean setups"
+    - "On 5m timeframe, I sometimes rush the exhaustion count"
+
+  edge_conditions:
+    - "Win rate is highest when C1 volume is >1.5x average"
+    - "Best results in first 90 minutes of session"
+    - "Short pattern is more reliable than long pattern"
+    - "5m timeframe gives more signals but slightly lower win rate than 15m"
+
+  learned_statistics:
+    total_trades: null
+    win_rate: null
+    avg_r: null
+    best_regime: null
+    worst_regime: null
+    best_session_time: null
+    avg_hold_minutes: null
+    last_updated: null
+
+
+# ─────────────────────────────
+# CHECKLIST (for UI)
+# ─────────────────────────────
+checklist:
+  - "C1 is a strong directional candle (body within thresholds)"
+  - "Gap from previous close is acceptable (<0.6% index, <1.5% stock)"
+  - "Exhaustion candles are progressively smaller"
+  - "At least one doji or tiny candle in the exhaustion zone"
+  - "Reference low/high identified from last meaningful exhaustion candle"
+  - "Stop loss = high of candle before trigger (NOT C1 high) + buffer"
+  - "For mirror long: regime is strong_bullish or extremely_oversold"
+  - "Tick/1s data available for live break monitoring"
+  - "Position sized to max 1% risk"
+  - "It's before 11:15 IST"
+  - "Targets and trailing stop are pre-set"
+  - "Must exit all by 15:15 IST"
+
+
+# ─────────────────────────────
+# TAGS
+# ─────────────────────────────
+tags:
+  - mean_reversion
+  - exhaustion
+  - candle_pattern
+  - intraday
+  - short_bias
+  - live_break_entry
+  - index
+  - nse
+  - 15m
+  - 5m

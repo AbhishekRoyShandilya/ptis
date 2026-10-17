@@ -1,0 +1,95 @@
+strategy:
+  id: "compression_breakout"
+  name: "Compression Breakout"
+  version: 1
+  description: "Price consolidates in a narrowing range (Bollinger squeeze), then breaks out with volume and ATR expansion. Edge: stored energy releasing directionally."
+  author: "library"
+  active: true
+  is_library: true
+
+  market_regime:
+    preferred:
+      - low_volatility
+      - breakout
+    neutral:
+      - trending_bullish
+      - trending_bearish
+    avoid:
+      - high_volatility
+      - ranging
+
+  entry:
+    direction: any
+    time_window:
+      start: "09:15"
+      end: "14:30"
+    confirmations:
+      - type: "bb_squeeze"
+        required: true
+        weight: 2.0
+        description: "Bollinger Band width below 20th percentile — compression active"
+        params:
+          percentile_threshold: 20
+      - type: "breakout_candle"
+        required: true
+        weight: 2.0
+        description: "Price closes outside BB after squeeze"
+        params:
+          min_close_outside: true
+      - type: "volume_surge"
+        required: true
+        weight: 1.5
+        description: "Volume 2x+ average on breakout bar"
+        params:
+          min_ratio: 2.0
+      - type: "atr_expansion"
+        required: false
+        weight: 1.0
+        description: "ATR expanding — momentum building"
+        params:
+          min_expansion_pct: 20
+    avoid_conditions:
+      - type: "news_event"
+        description: "Avoid breakouts into major earnings/results"
+        params: {}
+
+  exit:
+    stop_loss:
+      type: "structure"
+      params:
+        reference: "compression_low"
+        buffer_atr: 0.25
+    targets:
+      - r_multiple: 2.0
+        size_pct: 40
+      - r_multiple: 3.5
+        size_pct: 40
+      - r_multiple: 5.0
+        size_pct: 20
+    trailing:
+      enabled: true
+      type: "atr"
+      activate_at_r: 2.0
+      params:
+        atr_multiple: 2.0
+    time_exit:
+      enabled: true
+      max_duration_minutes: 240
+      close_before: "15:15"
+
+  risk:
+    max_risk_pct: 1.0
+    min_r_target: 2.0
+    max_daily_trades: 2
+    max_daily_loss_pct: 2.0
+
+  execution:
+    entry_type: "market"
+    preferred_timeframe: "15m"
+    notes: "Higher RR strategy — be selective. Only enter when all 3 required confirmations present."
+
+  invalidation:
+    - type: "failed_breakout"
+      description: "Price closes back inside BB within 3 bars"
+      params:
+        bars: 3

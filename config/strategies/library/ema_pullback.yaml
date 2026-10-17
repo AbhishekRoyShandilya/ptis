@@ -1,0 +1,90 @@
+strategy:
+  id: "ema_pullback"
+  name: "EMA Pullback"
+  version: 1
+  description: "Buy pullbacks to the 20 EMA in an uptrend, short rallies to 20 EMA in a downtrend. Edge: trend continuation at statistically significant moving average."
+  author: "library"
+  active: true
+  is_library: true
+
+  market_regime:
+    preferred:
+      - trending_bullish
+      - trending_bearish
+    neutral:
+      - breakout
+    avoid:
+      - ranging
+      - mean_reverting
+      - low_volatility
+
+  entry:
+    direction: any
+    time_window:
+      start: "10:00"
+      end: "14:00"
+    confirmations:
+      - type: "ema_proximity"
+        required: true
+        weight: 2.0
+        description: "Price touches or wicks into 20 EMA"
+        params:
+          ema_period: 20
+          max_distance_pct: 0.3
+      - type: "trend_alignment"
+        required: true
+        weight: 2.0
+        description: "Price above 50 EMA for longs, below for shorts"
+        params:
+          ema_period: 50
+      - type: "momentum_reset"
+        required: false
+        weight: 1.0
+        description: "RSI reset to 40-60 zone (cooled from extreme)"
+        params:
+          rsi_min: 35
+          rsi_max: 65
+    avoid_conditions:
+      - type: "ema_slope_flat"
+        description: "20 EMA slope near zero — no trend"
+        params:
+          min_slope_pct: 0.05
+
+  exit:
+    stop_loss:
+      type: "structure"
+      params:
+        reference: "swing_low"
+        buffer_atr: 0.3
+    targets:
+      - r_multiple: 1.5
+        size_pct: 50
+      - r_multiple: 3.0
+        size_pct: 50
+    trailing:
+      enabled: true
+      type: "ema"
+      activate_at_r: 1.5
+      params:
+        ema_period: 20
+    time_exit:
+      enabled: true
+      max_duration_minutes: 180
+      close_before: "15:00"
+
+  risk:
+    max_risk_pct: 1.0
+    min_r_target: 1.5
+    max_daily_trades: 3
+    max_daily_loss_pct: 2.0
+
+  execution:
+    entry_type: "limit"
+    preferred_timeframe: "15m"
+    notes: "Use 15m for entry confirmation, 5m for precise entry. Avoid first 45 min."
+
+  invalidation:
+    - type: "ema_break"
+      description: "Price closes below 20 EMA (for longs)"
+      params:
+        bars: 1

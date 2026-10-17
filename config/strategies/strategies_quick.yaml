@@ -1,0 +1,104 @@
+# config/strategies/strategies_quick.yaml (UPDATED with checklists)
+
+strategies:
+
+  - name: opening_range_breakout
+    display_name: "Opening Range Breakout"
+    description: "Breakout above/below first 15-min range with volume"
+    default_stop_type: structure
+    default_r_target: 2.0
+    typical_session: open
+    tags: [momentum, opening]
+
+    # ── ADD THIS ──
+    time_window_start: "09:30"
+    time_window_end: "10:15"
+    requires_volume_spike: true
+    requires_trend: false
+    typical_hold_minutes: 30
+
+    checklist:
+      - "Opening range (first 15 min) is clearly defined"
+      - "Price closed ABOVE range high (long) or BELOW range low (short)"
+      - "Volume on breakout candle is above average"
+      - "No major resistance/support within 1 ATR of entry"
+      - "Risk is max 1% of account"
+      - "Stop is at opposite side of opening range"
+      - "Target is minimum 2R"
+
+    # Shadow trade management rules
+    trailing_stop_enabled: true
+    trailing_activation_r: 1.5
+    partial_exit_at_r: 2.0
+
+
+  - name: vwap_bounce
+    display_name: "VWAP Bounce"
+    description: "Long/short on bounce from VWAP with confirmation candle"
+    default_stop_type: atr
+    default_r_target: 2.0
+    typical_session: midday
+    tags: [mean_reversion, intraday]
+
+    time_window_start: "10:00"
+    time_window_end: "15:00"
+    requires_volume_spike: false
+    requires_trend: false
+
+    checklist:
+      - "Price has touched or come within 0.1% of VWAP"
+      - "Rejection candle formed at VWAP (hammer/engulfing/pin)"
+      - "Trade is in direction of overall daily trend"
+      - "Not fading a strong trend (ADX < 30 preferred)"
+      - "Risk defined below/above rejection candle"
+      - "Target is prior high/low or 2R minimum"
+
+    trailing_stop_enabled: false
+
+
+  - name: pullback_to_ema
+    display_name: "Pullback to 21 EMA"
+    description: "Enter on pullback to 21 EMA in trending market"
+    default_stop_type: swing
+    default_r_target: 2.5
+    typical_session: any
+    tags: [trend, pullback]
+
+    requires_trend: true
+
+    checklist:
+      - "Clear trend established (9 EMA above 21 EMA for longs)"
+      - "Price has pulled back TO the 21 EMA (not just near it)"
+      - "Rejection/confirmation candle at EMA level"
+      - "Volume declining on pullback"
+      - "Higher timeframe trend confirms direction"
+      - "Stop below recent swing low (longs)"
+      - "Minimum 2.5R target"
+
+    trailing_stop_enabled: true
+    trailing_activation_r: 1.0
+
+
+  - name: gap_and_go
+    display_name: "Gap & Go"
+    description: "Trade continuation of pre-market gap on open"
+    default_stop_type: candle
+    default_r_target: 2.0
+    typical_session: open
+    tags: [momentum, gap]
+
+    time_window_start: "09:30"
+    time_window_end: "10:00"
+    requires_volume_spike: true
+
+    checklist:
+      - "Stock gapped up/down significantly (>2%)"
+      - "Pre-market volume is high"
+      - "First candle confirms gap direction"
+      - "Volume on first candle is strong"
+      - "No immediate resistance in gap direction"
+      - "Stop below first candle low (longs)"
+
+    trailing_stop_enabled: true
+    trailing_activation_r: 1.0
+    partial_exit_at_r: 1.5

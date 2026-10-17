@@ -1,0 +1,90 @@
+strategy:
+  id: "expiry_fade"
+  name: "Expiry Fade"
+  version: 1
+  description: "Fade overextended moves in the last 2 hours of NSE weekly expiry (Thursday). Edge: option sellers defend strikes, causing mean reversion near max pain."
+  author: "library"
+  active: true
+  is_library: true
+
+  market_regime:
+    preferred:
+      - ranging
+      - mean_reverting
+      - high_volatility
+    neutral:
+      - trending_bullish
+      - trending_bearish
+    avoid:
+      - low_volatility
+
+  entry:
+    direction: any
+    time_window:
+      start: "13:30"
+      end: "15:00"
+    confirmations:
+      - type: "expiry_day"
+        required: true
+        weight: 2.0
+        description: "Thursday (NSE weekly expiry)"
+        params:
+          day_of_week: 3
+      - type: "overextension"
+        required: true
+        weight: 2.0
+        description: "Index extended 1.5+ ATR from session VWAP"
+        params:
+          min_atr_distance: 1.5
+      - type: "max_pain_proximity"
+        required: false
+        weight: 1.5
+        description: "Price far from max pain level"
+        params: {}
+      - type: "vix_elevated"
+        required: false
+        weight: 1.0
+        description: "India VIX above 15 — premium worth selling"
+        params:
+          min_vix: 15
+    avoid_conditions:
+      - type: "major_event"
+        description: "Avoid on RBI/Fed meeting days"
+        params: {}
+
+  exit:
+    stop_loss:
+      type: "atr"
+      params:
+        atr_multiple: 1.0
+    targets:
+      - r_multiple: 1.0
+        size_pct: 60
+      - r_multiple: 1.5
+        size_pct: 40
+    trailing:
+      enabled: false
+      type: ""
+      activate_at_r: 1.0
+      params: {}
+    time_exit:
+      enabled: true
+      max_duration_minutes: 60
+      close_before: "15:20"
+
+  risk:
+    max_risk_pct: 0.5
+    min_r_target: 1.0
+    max_daily_trades: 2
+    max_daily_loss_pct: 1.0
+
+  execution:
+    entry_type: "limit"
+    preferred_timeframe: "5m"
+    notes: "Expiry-specific. Only trade on Thursdays. Small size — can be volatile. Hard exit at 15:20."
+
+  invalidation:
+    - type: "momentum_continuation"
+      description: "Strong directional close — not reversing"
+      params:
+        min_body_pct: 0.7

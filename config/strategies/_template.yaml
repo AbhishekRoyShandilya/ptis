@@ -1,0 +1,85 @@
+# _template.yaml
+# config/strategies/_template.yaml
+# ══════════════════════════════════════════════
+# PTIS Strategy Template — Copy & customize
+# ══════════════════════════════════════════════
+
+strategy:
+  name: ""
+  id: ""                          # unique slug (snake_case)
+  version: 1
+  description: ""
+  author: "trader"
+  active: true
+
+  # ── Market Regime Compatibility ──
+  market_regime:
+    preferred: []                  # trending_up, trending_down, range, volatile, low_vol
+    avoid: []
+    neutral: []                    # acceptable but not ideal
+
+  # ── Entry Rules ──
+  entry:
+    direction: any                 # long, short, any
+
+    confirmations:                 # ALL required=true must be met
+      - type: ""                   # condition type (registered name)
+        params: {}                 # condition-specific parameters
+        required: true             # required vs supporting
+        weight: 1.0               # importance weight for scoring
+
+    avoid_conditions:              # ANY met = trade invalid
+      - type: ""
+        params: {}
+        description: ""
+
+    time_window:
+      start: "09:30"
+      end: "16:00"
+      timezone: "US/Eastern"
+
+  # ── Exit Rules ──
+  exit:
+    stop_loss:
+      type: fixed                  # fixed, atr, structure, percentage
+      params:
+        value: null
+
+    targets:
+      - r_multiple: 1.0
+        size_pct: 50
+      - r_multiple: 2.0
+        size_pct: 50
+
+    trailing:
+      enabled: false
+      type: ""                     # swing, atr, percentage, breakeven
+      params: {}
+      activate_at_r: 1.0
+
+    time_exit:
+      enabled: false
+      max_duration_minutes: null
+      close_before: "15:50"
+
+  # ── Risk Rules ──
+  risk:
+    max_risk_pct: 1.0
+    max_risk_amount: null
+    max_position_size: null
+    max_daily_trades: null
+    max_daily_loss_pct: null
+    min_r_target: 1.5
+    max_correlated_positions: null
+
+  # ── Invalidation Conditions ──
+  invalidation:
+    - type: ""
+      params: {}
+      description: ""
+
+  # ── Execution Preferences ──
+  execution:
+    entry_type: market              # market, limit, stop, stop_limit
+    preferred_timeframe: "5m"
+    notes: ""
